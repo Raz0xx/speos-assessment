@@ -49,7 +49,7 @@ public class PartnerController {
     public ResponseEntity<PartnerDto> createPartner(
             @RequestBody Partner partner
     ) {
-        return new ResponseEntity<>(service.saveEntity(partner), HttpStatus.CREATED);
+        return new ResponseEntity<>(service.createEntity(partner), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
@@ -60,7 +60,7 @@ public class PartnerController {
             @PathVariable(name = "id", required = true) long id,
             @RequestBody Partner partner
     ) {
-        return new ResponseEntity<>(null, HttpStatus.OK);
+        return new ResponseEntity<>(service.updateEntity(id, partner), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")

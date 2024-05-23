@@ -64,4 +64,9 @@ public class Partner extends GenericDtoImpl implements PartnerBiz {
     public void setExpirationTime(OffsetDateTime expirationTime) {
         this.expirationTime = expirationTime;
     }
+
+    @Override
+    public boolean hasValidLocale() {
+        return locale != null;
+    }
 }

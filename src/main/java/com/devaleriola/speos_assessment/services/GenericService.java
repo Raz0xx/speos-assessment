@@ -6,7 +6,9 @@ import java.util.List;
 
 public interface GenericService<T extends GenericDto> {
 
-    T saveEntity(T object);
+    T createEntity(T object);
+
+    T updateEntity(Long id, T object);
 
     T getEntityById(Long id);
 

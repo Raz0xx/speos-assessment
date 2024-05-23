@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 public abstract class GenericServiceImpl<T extends GenericDto, U extends GenericEntity> implements GenericService<T> {
 
-    private final GenericRepository<U> repository;
+    protected final GenericRepository<U> repository;
     @Autowired
     private GenericMapper mapper;
     private Method toDtoMethod, toEntityMethod;
@@ -42,7 +42,12 @@ public abstract class GenericServiceImpl<T extends GenericDto, U extends Generic
     }
 
     @Override
-    public T saveEntity(T entity) {
+    public T createEntity(T entity) {
+        return this.toDto(this.repository.save(this.toEntity(entity)));
+    }
+
+    @Override
+    public T updateEntity(Long id, T entity) {
         return this.toDto(this.repository.save(this.toEntity(entity)));
     }
 

@@ -13,7 +13,7 @@ public class PartnerEntity extends GenericEntity {
     @Column(name = "companyName")
     private String name;
 
-    @Column(name = "ref")
+    @Column(name = "ref", unique = true)
     private String reference;
 
     @Column(name = "locale")

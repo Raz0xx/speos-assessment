@@ -38,7 +38,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
             WebRequest request
     ) {
         String message = exception.getCause() != null ? exception.getCause().getMessage() : exception.getMessage();
-        logger.warn(message);
+        logger.info(message);
         return this.buildException(new GenericException(message), HttpStatus.BAD_REQUEST);
     }
 
@@ -77,7 +77,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     })
     public ResponseEntity<Object> handleGenericException(GenericException exception, WebRequest request) {
         String message = exception.getCause() != null ? exception.getCause().getMessage() : exception.getMessage();
-        logger.warn(message);
+        logger.info(message);
         return this.buildException(new GenericException(message), HttpStatus.BAD_REQUEST);
     }
 }
