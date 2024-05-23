@@ -8,9 +8,11 @@ public interface GenericService<T extends GenericDto> {
 
     T saveEntity(T object);
 
-    T getEntityById(long id);
+    T getEntityById(Long id);
 
     List<T> getAllEntities();
+
+    List<T> getAllEntities(Integer from, Integer size);
 
     List<T> getEntitiesById(List<Long> ids);
 

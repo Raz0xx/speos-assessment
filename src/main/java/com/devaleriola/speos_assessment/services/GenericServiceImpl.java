@@ -2,15 +2,21 @@ package com.devaleriola.speos_assessment.services;
 
 import com.devaleriola.speos_assessment.entities.GenericDto;
 import com.devaleriola.speos_assessment.entities.GenericEntity;
+import com.devaleriola.speos_assessment.exceptions.InvalidPageFromException;
+import com.devaleriola.speos_assessment.exceptions.InvalidPageSizeException;
+import com.devaleriola.speos_assessment.exceptions.ResourceNotFoundException;
+import com.devaleriola.speos_assessment.models.OffsetBasedPageRequest;
 import com.devaleriola.speos_assessment.repositories.GenericRepository;
 import com.devaleriola.speos_assessment.utils.GenericMapper;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public abstract class GenericServiceImpl<T extends GenericDto, U extends GenericEntity> implements GenericService<T> {
@@ -19,6 +25,8 @@ public abstract class GenericServiceImpl<T extends GenericDto, U extends Generic
     @Autowired
     private GenericMapper mapper;
     private Method toDtoMethod, toEntityMethod;
+    @Value("${database.default_page_size}")
+    private int defaultPageSize;
 
     @Autowired
     public GenericServiceImpl(GenericRepository<U> repository) {
@@ -39,14 +47,42 @@ public abstract class GenericServiceImpl<T extends GenericDto, U extends Generic
     }
 
     @Override
-    public T getEntityById(long id) {
-        //lazy loading
-        return this.toDto(this.repository.getReferenceById(id));
+    public T getEntityById(Long id) {
+        Optional<U> entity = this.repository.findById(id);
+        if (entity.isEmpty()) {
+            throw new ResourceNotFoundException();
+        }
+
+        return this.toDto(entity.get());
     }
 
     @Override
     public List<T> getAllEntities() {
-        return this.repository.findAll().stream().map(this::toDto).collect(Collectors.toList());
+        return this.repository
+                .findAll()
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<T> getAllEntities(Integer from, Integer size) {
+        var pageSize = size == null ? defaultPageSize : size;
+        if (pageSize < 1) {
+            throw new InvalidPageSizeException();
+        }
+
+        var pageFrom = from == null ? 0 : from;
+        if (pageFrom < 0) {
+            throw new InvalidPageFromException();
+        }
+
+        return this.repository
+                .findAll(new OffsetBasedPageRequest(pageSize, pageFrom))
+                .getContent()
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override
