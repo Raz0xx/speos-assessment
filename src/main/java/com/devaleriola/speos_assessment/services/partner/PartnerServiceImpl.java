@@ -9,8 +9,10 @@ import com.devaleriola.speos_assessment.exceptions.ReferenceAlreadyUsedException
 import com.devaleriola.speos_assessment.exceptions.ResourceNotFoundException;
 import com.devaleriola.speos_assessment.repositories.partner.PartnerRepository;
 import com.devaleriola.speos_assessment.services.GenericServiceImpl;
+import com.devaleriola.speos_assessment.utils.GenericMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -18,11 +20,15 @@ import java.util.List;
 public class PartnerServiceImpl extends GenericServiceImpl<PartnerDto, PartnerEntity> implements PartnerService {
 
     @Autowired
+    private GenericMapper mapper;
+
+    @Autowired
     public PartnerServiceImpl(PartnerRepository repository) {
         super(repository);
     }
 
     @Override
+    @Transactional
     public PartnerDto getEntityById(Long id) {
         try {
             return super.getEntityById(id);
@@ -32,19 +38,53 @@ public class PartnerServiceImpl extends GenericServiceImpl<PartnerDto, PartnerEn
     }
 
     @Override
+    @Transactional
     public PartnerDto createEntity(PartnerDto entity) {
+        //Business validations
         PartnerBiz partnerBiz = (PartnerBiz) entity;
         this.validatePartnerGeneralData(partnerBiz);
-        this.validateCreationConstraints(partnerBiz);
+
+        //DB-related validations
+        this.validateCreationConstraints(entity);
+
         return super.createEntity(entity);
     }
 
     @Override
+    @Transactional
     public PartnerDto updateEntity(Long id, PartnerDto entity) {
+        entity.setId(id);
+
+        //Business validations
         PartnerBiz partnerBiz = (PartnerBiz) entity;
         this.validatePartnerGeneralData(partnerBiz);
-        this.validateUpdateConstraints(partnerBiz);
-        return super.updateEntity(id, entity);
+
+        //Allow for both PUT and MERGE operations by fetching back the original record
+        //and updating the changed fields only
+        PartnerDto existingPartner;
+        try {
+            existingPartner = this.getEntityById(id);
+        } catch (ResourceNotFoundException exception) {
+            throw new PartnerNotFoundException(id);
+        }
+
+        //DB-related validations
+        this.validateUpdateConstraints(existingPartner, entity);
+
+        mapper.updatePartnerFromPartner(existingPartner, entity);
+
+        //Don't call super method as entity has already been retrieved from DB
+        return this.toDto(this.repository.save(this.toEntity(existingPartner)));
+    }
+
+    @Override
+    @Transactional
+    public void deleteEntity(Long id) {
+        try {
+            super.deleteEntity(id);
+        } catch (ResourceNotFoundException exception) {
+            throw new PartnerNotFoundException(id);
+        }
     }
 
     private void validatePartnerGeneralData(PartnerBiz partner) {
@@ -53,21 +93,18 @@ public class PartnerServiceImpl extends GenericServiceImpl<PartnerDto, PartnerEn
         }
     }
 
-    private void validateCreationConstraints(PartnerBiz partner) {
+    private void validateCreationConstraints(PartnerDto partner) {
         if (!((PartnerRepository) this.repository).findByReference(partner.getReference()).isEmpty()) {
             throw new ReferenceAlreadyUsedException(partner.getReference());
         }
     }
 
-    private void validateUpdateConstraints(PartnerBiz partner) {
-        List<PartnerEntity> existingPartners = ((PartnerRepository) this.repository).findByReference(partner.getReference());
-        if (existingPartners.isEmpty()) {
-            return;
-        }
-
-        PartnerDto existingPartner = this.toDto(existingPartners.get(0));
-        if (!existingPartner.getReference().equals(partner.getReference())) {
-            throw new ReferenceAlreadyUsedException(partner.getReference());
+    private void validateUpdateConstraints(PartnerDto oldPartner, PartnerDto newPartner) {
+        if (!oldPartner.getReference().equals(newPartner.getReference())) {
+            List<PartnerEntity> existingPartners = ((PartnerRepository) this.repository).findByReference(newPartner.getReference());
+            if (!existingPartners.isEmpty() && existingPartners.get(0).getId() != newPartner.getId()) {
+                throw new ReferenceAlreadyUsedException(newPartner.getReference());
+            }
         }
     }
 }

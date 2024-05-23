@@ -8,7 +8,7 @@ public class OffsetBasedPageRequest implements Pageable {
     private final int from;
 
     // Constructor could be expanded if sorting is needed
-    private final Sort sort = Sort.by(Sort.Direction.DESC, "id");
+    private final Sort sort = Sort.by(Sort.Direction.ASC, "id");
 
     public OffsetBasedPageRequest(int size, int from) {
         if (size < 1) {

@@ -11,6 +11,7 @@ import com.devaleriola.speos_assessment.utils.GenericMapper;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -42,13 +43,31 @@ public abstract class GenericServiceImpl<T extends GenericDto, U extends Generic
     }
 
     @Override
+    @Transactional
     public T createEntity(T entity) {
         return this.toDto(this.repository.save(this.toEntity(entity)));
     }
 
     @Override
+    @Transactional
     public T updateEntity(Long id, T entity) {
+        Optional<U> existingEntity = this.repository.findById(id);
+        if (existingEntity.isEmpty()) {
+            throw new ResourceNotFoundException();
+        }
+
         return this.toDto(this.repository.save(this.toEntity(entity)));
+    }
+
+    @Override
+    @Transactional
+    public void deleteEntity(Long id) {
+        Optional<U> entity = this.repository.findById(id);
+        if (entity.isEmpty()) {
+            throw new ResourceNotFoundException();
+        }
+
+        this.repository.deleteById(id);
     }
 
     @Override

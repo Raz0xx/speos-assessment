@@ -70,5 +70,6 @@ public class PartnerController {
     public void deletePartner(
             @PathVariable(name = "id", required = true) long id
     ) {
+        service.deleteEntity(id);
     }
 }

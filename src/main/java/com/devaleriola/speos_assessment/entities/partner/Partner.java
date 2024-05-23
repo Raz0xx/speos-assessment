@@ -67,6 +67,7 @@ public class Partner extends GenericDtoImpl implements PartnerBiz {
 
     @Override
     public boolean hasValidLocale() {
-        return locale != null;
+        //the locale is set by the custom deserializer
+        return locale != null && locale.getISO3Language() != null && locale.getISO3Country() != null;
     }
 }

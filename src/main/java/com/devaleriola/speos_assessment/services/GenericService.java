@@ -10,6 +10,8 @@ public interface GenericService<T extends GenericDto> {
 
     T updateEntity(Long id, T object);
 
+    void deleteEntity(Long id);
+
     T getEntityById(Long id);
 
     List<T> getAllEntities();
