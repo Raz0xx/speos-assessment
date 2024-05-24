@@ -21,3 +21,9 @@ including its connectivity to the H2 database.
 
 The Partners API is available under the `/api/partners` endpoint. For functional testing or documentation please use the
 Swagger environment available under the [/swagger-ui.html](http://localhost:8080/swagger-ui.html).
+
+## Tests
+
+You can run the integration tests with Spring by executing the `mvn test` command.
+No unit tests have been created for this application as the scope is rather limited, the integration tests already cover
+the end-to-end flows.

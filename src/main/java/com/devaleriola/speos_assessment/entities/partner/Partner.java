@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.OffsetDateTime;
 import java.util.Locale;
+import java.util.MissingResourceException;
+import java.util.Objects;
 
 public class Partner extends GenericDtoImpl implements PartnerBiz {
 
@@ -68,6 +70,30 @@ public class Partner extends GenericDtoImpl implements PartnerBiz {
     @Override
     public boolean hasValidLocale() {
         //the locale is set by the custom deserializer
-        return locale != null && locale.getISO3Language() != null && locale.getISO3Country() != null;
+        if (locale == null) {
+            return true;
+        }
+
+        try {
+            locale.getISO3Language();
+            locale.getISO3Country();
+        } catch (MissingResourceException exception) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Partner partner = (Partner) o;
+        return Objects.equals(name, partner.name) && Objects.equals(reference, partner.reference) && Objects.equals(locale, partner.locale) && Objects.equals(expirationTime, partner.expirationTime);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, reference, locale, expirationTime);
     }
 }
